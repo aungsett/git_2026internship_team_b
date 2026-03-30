@@ -375,6 +375,11 @@ const ApplicantDetail = () => {
                     <p className="text-sm text-muted-foreground mb-2">CV Keyword Match</p>
                     <div className="flex items-center gap-3 mb-3">
                       <Badge 
+                       title={
+    applicant.matched_keywords && applicant.matched_keywords.length > 0
+      ? `Matched: ${applicant.matched_keywords.join(", ")}`
+      : "No keywords matched"
+  }
                         variant={applicant.keyword_match_score && applicant.keyword_match_score >= 50 ? "default" : "secondary"}
                         className={applicant.keyword_match_score && applicant.keyword_match_score >= 50 ? "bg-success text-lg px-3 py-1" : "text-lg px-3 py-1"}
                       >
