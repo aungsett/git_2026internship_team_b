@@ -22,30 +22,19 @@ import {
 } from "@/components/ui/form";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import {
-  FileText,
-  Upload,
-  CheckCircle,
-  User,
-  Mail,
-  Calendar,
-  GraduationCap,
-  Briefcase,
-  BookOpen,
-  MessageSquare,
-} from "lucide-react";
+import { FileText, Upload, CheckCircle, User, Mail, Calendar, GraduationCap, Briefcase, BookOpen, MessageSquare } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 const formSchema = z.object({
-  fullName: z.string().min(2, "Name must be at least 2 characters").max(100),
+  fullName: z.string().min(2, "Name must be at least 2 characters").max(100, "Name must be less than 100 characters"),
   dateOfBirth: z.string().min(1, "Date of birth is required"),
-  email: z.string().email("Invalid email address").max(255),
+  email: z.string().email("Invalid email address").max(255, "Email must be less than 255 characters"),
   highestDegree: z.string().min(1, "Please select your highest degree"),
-  yearsOfExperience: z.coerce.number().min(0).max(50),
+  yearsOfExperience: z.coerce.number().min(0, "Experience must be 0 or more").max(50, "Experience must be 50 or less"),
   preferredCourse: z.string().min(1, "Please select a course"),
-  comments: z.string().max(1000).optional(),
+  comments: z.string().max(1000, "Comments must be less than 1000 characters").optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -60,14 +49,22 @@ const degrees = [
 ];
 
 const courses = [
-  "JLPT N5 Preparation",
-  "JLPT N4 Preparation",
-  "JLPT N3 Preparation",
-  "JLPT N2 Preparation",
-  "JLPT N1 Preparation",
-  "Business Japanese",
-  "Conversational Japanese",
-  "Japanese for Travel",
+  "JLPT N5 Preparation (WEEKDAY)",
+  "JLPT N5 Preparation (WEEKEND)",
+  "JLPT N4 Preparation (WEEKDAY)",
+  "JLPT N4 Preparation (WEEKEND)",
+  "JLPT N3 Preparation (WEEKDAY)",
+  "JLPT N3 Preparation (WEEKEND)",
+  "JLPT N2 Preparation (WEEKDAY)",
+  "JLPT N2 Preparation (WEEKEND)",
+  "JLPT N1 Preparation (WEEKDAY)",
+  "JLPT N1 Preparation (WEEKEND)",
+  "Business Japanese (WEEKDAY)",
+  "Business Japanese (WEEKEND)",
+  "Conversational Japanese (WEEKDAY)",
+  "Conversational Japanese (WEEKEND)",
+  "Japanese for Travel (WEEKDAY)",
+  "Japanese for Travel (WEEKEND)",
 ];
 
 const Index = () => {
@@ -90,17 +87,17 @@ const Index = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (file.type !== "application/pdf") {
-      toast.error("Please upload a PDF file only");
-      return;
+    if (file) {
+      if (file.type !== "application/pdf") {
+        toast.error("Please upload a PDF file only");
+        return;
+      }
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error("File size must be less than 5MB");
+        return;
+      }
+      setCvFile(file);
     }
-    if (file.size > MAX_FILE_SIZE) {
-      toast.error("File size must be less than 5MB");
-      return;
-    }
-    setCvFile(file);
   };
 
   const onSubmit = async (data: FormData) => {
@@ -112,39 +109,39 @@ const Index = () => {
     setIsSubmitting(true);
 
     try {
+      // Upload CV to storage
       const fileName = `${Date.now()}-${cvFile.name}`;
-
-      // 1️⃣ Insert applicant first
-      const { data: insertData, error: insertError } = await supabase
-        .from("applicants")
-        .insert({
-          full_name: data.fullName,
-          date_of_birth: data.dateOfBirth,
-          email: data.email,
-          highest_degree: data.highestDegree,
-          years_of_experience: data.yearsOfExperience,
-          preferred_course: data.preferredCourse,
-          cv_file_path: fileName,
-          comments: data.comments || null,
-        })
-        .select("id")
-        .single();
-
-      if (insertError) throw insertError;
-
-      // 2️⃣ Upload CV after insert
       const { error: uploadError } = await supabase.storage
         .from("cvs")
         .upload(fileName, cvFile);
 
       if (uploadError) throw uploadError;
 
-      // 3️⃣ Trigger CV parsing in background (non-blocking)
-      supabase.functions
-        .invoke("parse-cv", {
-          body: { applicantId: insertData?.id, filePath: fileName },
-        })
-        .catch((err) => console.error("CV parsing error:", err));
+      // Insert applicant data
+      const { data: applicantData, error: insertError } = await supabase.from("applicants").insert({
+        full_name: data.fullName,
+        date_of_birth: data.dateOfBirth,
+        email: data.email,
+        highest_degree: data.highestDegree,
+        years_of_experience: data.yearsOfExperience,
+        preferred_course: data.preferredCourse,
+        cv_file_path: fileName,
+        comments: data.comments || null,
+      }).select("id").single();
+
+      if (insertError) throw insertError;
+
+      // Trigger CV parsing in the background
+      if (applicantData?.id) {
+        supabase.functions.invoke("parse-cv", {
+          body: {
+            applicantId: applicantData.id,
+            cvFilePath: fileName,
+          },
+        }).catch((error) => {
+          console.error("CV parsing error (non-blocking):", error);
+        });
+      }
 
       setIsSuccess(true);
       toast.success("Application submitted successfully!");
@@ -163,13 +160,10 @@ const Index = () => {
           <div className="w-20 h-20 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-6">
             <CheckCircle className="w-10 h-10 text-success" />
           </div>
-          <h1 className="font-display text-3xl font-bold mb-4">
-            Application Submitted!
-          </h1>
+          <h1 className="font-display text-3xl font-bold mb-4">Application Submitted!</h1>
           <p className="text-muted-foreground mb-8">
-            Thank you for applying. We have received your application and will
-            review it shortly. You will be contacted via email regarding the
-            next steps.
+            Thank you for applying. We have received your application and will review it shortly. 
+            You will be contacted via email regarding the next steps.
           </p>
           <Button onClick={() => window.location.reload()} variant="outline">
             Submit Another Application
@@ -191,9 +185,7 @@ const Index = () => {
             <span className="font-display font-bold text-xl">JapanLearn ATS</span>
           </div>
           <Link to="/admin/login">
-            <Button variant="ghost" size="sm">
-              Admin Login
-            </Button>
+            <Button variant="ghost" size="sm">Admin Login</Button>
           </Link>
         </div>
       </header>
@@ -206,23 +198,18 @@ const Index = () => {
               Start Your Japanese Learning Journey
             </h1>
             <p className="text-lg text-muted-foreground">
-              Apply now to join our comprehensive Japanese language courses. Fill
-              out the form below and upload your CV to get started.
+              Apply now to join our comprehensive Japanese language courses. 
+              Fill out the form below and upload your CV to get started.
             </p>
           </div>
 
           {/* Application Form */}
           <div className="max-w-2xl mx-auto">
             <div className="card-elevated p-6 md:p-10 animate-slide-up">
-              <h2 className="font-display text-2xl font-semibold mb-8">
-                Application Form
-              </h2>
-
+              <h2 className="font-display text-2xl font-semibold mb-8">Application Form</h2>
+              
               <Form {...form}>
-                <form
-                  onSubmit={form.handleSubmit(onSubmit)}
-                  className="space-y-6"
-                >
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                   {/* Full Name */}
                   <FormField
                     control={form.control}
@@ -270,11 +257,7 @@ const Index = () => {
                           Email Address
                         </FormLabel>
                         <FormControl>
-                          <Input
-                            type="email"
-                            placeholder="your.email@example.com"
-                            {...field}
-                          />
+                          <Input type="email" placeholder="your.email@example.com" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -291,10 +274,7 @@ const Index = () => {
                           <GraduationCap className="w-4 h-4" />
                           Highest Degree
                         </FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select your highest degree" />
@@ -341,10 +321,7 @@ const Index = () => {
                           <BookOpen className="w-4 h-4" />
                           Preferred Japanese Course
                         </FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select a course" />
@@ -405,7 +382,7 @@ const Index = () => {
                           Comments (Optional)
                         </FormLabel>
                         <FormControl>
-                          <Textarea
+                          <Textarea 
                             placeholder="Any additional information you'd like to share..."
                             rows={4}
                             {...field}
@@ -416,10 +393,10 @@ const Index = () => {
                     )}
                   />
 
-                  <Button
-                    type="submit"
-                    variant="hero"
-                    size="lg"
+                  <Button 
+                    type="submit" 
+                    variant="hero" 
+                    size="lg" 
                     className="w-full"
                     disabled={isSubmitting}
                   >
