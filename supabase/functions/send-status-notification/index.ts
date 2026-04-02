@@ -1,31 +1,21 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
-const DEMO_EMAIL = "applicant.email";
+const DEMO_EMAIL = "ashishupadhyay7353@gmail.com";
 
 const resendKey = Deno.env.get("RESEND_API_KEY");
 console.log("RESEND_API_KEY exists:", !!resendKey);
 
-/*
 if (!resendKey) {
   throw new Error("RESEND_API_KEY is missing in Supabase secrets");
 }
-  */
 
 const resend = new Resend(resendKey);
 
-/*
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-*/
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 interface StatusNotificationRequest {
@@ -85,7 +75,7 @@ const handler = async (req: Request): Promise<Response> => {
   console.log("Status notification function called");
 
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
