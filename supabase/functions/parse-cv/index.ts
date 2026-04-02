@@ -1,24 +1,14 @@
-
-
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import * as pdfjsLib from "https://esm.sh/pdfjs-dist@4.2.67/legacy/build/pdf.mjs";
 (pdfjsLib as any).GlobalWorkerOptions.workerSrc =
   "https://esm.sh/pdfjs-dist@4.2.67/legacy/build/pdf.worker.mjs";
 
 
-/*
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
-*/
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
-
 
 // Predefined job-related keywords for matching
 const JOB_KEYWORDS = [
@@ -45,15 +35,8 @@ const JOB_KEYWORDS = [
 // Extract text from PDF using pdf-parse compatible approach
 async function extractTextFromPDF(pdfBuffer: ArrayBuffer): Promise<string> {
   try {
-    /*const loadingTask = (pdfjsLib as any).getDocument({
-      data: pdfBuffer,
-      disableWorker: true,
-    });*/
-
     const loadingTask = (pdfjsLib as any).getDocument({
-      data: new Uint8Array(pdfBuffer),
-      useWorkerFetch: false,
-      isEvalSupported: false,
+      data: pdfBuffer,
       disableWorker: true,
     });
 
@@ -114,11 +97,8 @@ function calculateKeywordMatch(text: string, customKeywords: string[] = []): {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-  return new Response("ok", {
-    status: 200,
-    headers: corsHeaders,
-  });
-}
+    return new Response(null, { headers: corsHeaders });
+  }
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
