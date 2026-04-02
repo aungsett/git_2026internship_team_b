@@ -5,68 +5,52 @@ This project is a full-stack Applicant Tracking System (ATS) designed to streaml
 
 2. Features
 2.1 Applicant Features
-- Submit personal and professional details
-- Upload resume (PDF format)
-- Automatic resume parsing and data extraction
+  - Submit personal and professional details
+  - Upload resume (PDF format)
+  - Automatic resume parsing and data extraction
 
 2.2 Admin Features
-- Admin login functionality
-- View all submitted applications
-- Access detailed applicant information
-- Update application status
+  - Admin login functionality
+  - View all submitted applications
+  - Access detailed applicant information
+  - Update application status
 
 2.3 System Features
-- Resume text extraction from PDF files
-- Database integration using Supabase
-- Email notifications for status updates
-- Responsive and user-friendly interface
+  - Resume text extraction from PDF files
+  - Database integration using Supabase
+  - Email notifications for status updates
+  - Responsive and user-friendly interface
 
 3. Tech Stack
+ 
 3.1 Frontend
-- React (TypeScript)
-- Vite
-- Tailwind CSS
+  - React (TypeScript)
+  - Vite
+  - Tailwind CSS
 
 3.2 Backend
-- Supabase (Database and Serverless Functions)
+  - Supabase (Database and Serverless Functions)
 
 3.3 Additional Tools
-- PDF parsing utilities
-- Email notification service
+  - PDF parsing utilities
+  - Email notification service
+
+4. Application Flow
+
+  - The user fills out the application form and uploads a resume.
+  - The resume is sent to the backend for processing.
+  - A serverless function extracts relevant data from the resume.
+  - Extracted data is stored in the Supabase database.
+  - The admin logs into the dashboard to view applications.
+  - The admin updates the application status.
+  - A notification email is sent to the applicant.
 
 
-4. Project Structure
-
-├── src/
-│ ├── components/ # Reusable UI components
-│ ├── pages/ # Application pages
-│ ├── hooks/ # Custom React hooks
-│ ├── utils/ # Utility functions (e.g., PDF parsing)
-│ ├── integrations/ # Supabase client setup
-│
-├── supabase/
-│ ├── functions/ # Serverless backend functions
-│ ├── migrations/ # Database schema and SQL files
-│
-├── public/
-├── package.json
-├── tailwind.config.ts
-├── vite.config.ts
-
-
-5. Application Flow
-
-1. The user fills out the application form and uploads a resume.
-2. The resume is sent to the backend for processing.
-3. A serverless function extracts relevant data from the resume.
-4. Extracted data is stored in the Supabase database.
-5. The admin logs into the dashboard to view applications.
-6. The admin updates the application status.
-7. A notification email is sent to the applicant.
-
-
-6. Setup Guide
-6.1 Clone the Repository
-
-git clone <your-repository-url>
-cd <project-folder>
+5. Setup Guide
+5.1 Clone the Repository
+   git clone https://github.com/aungsett/git_2026internship_team_b.git
+   cd git_2026internship_team_b
+5.2 Install Dependencies
+   npm install
+5.3 Run Locally
+   npm run dev
