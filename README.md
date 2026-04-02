@@ -1,9 +1,11 @@
 Applicant Tracking System (ATS)
 
 1. Project Overview
+
 This project is a full-stack Applicant Tracking System (ATS) designed to streamline the recruitment process. Applicants can submit their details along with resumes, which are automatically processed to extract relevant information. The system stores this data in a database and provides an admin dashboard for managing applications and updating their status.
 
 2. Features
+
 2.1 Applicant Features
   - Submit personal and professional details
   - Upload resume (PDF format)
@@ -47,10 +49,17 @@ This project is a full-stack Applicant Tracking System (ATS) designed to streaml
 
 
 5. Setup Guide
+   
 5.1 Clone the Repository
+
    git clone https://github.com/aungsett/git_2026internship_team_b.git
+   
    cd git_2026internship_team_b
+   
 5.2 Install Dependencies
+
    npm install
+   
 5.3 Run Locally
+
    npm run dev
